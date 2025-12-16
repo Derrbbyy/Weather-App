@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gradient-to-br from-gray-900 via-gray-800 to-purple-600 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-4xl font-bold text-center mb-2 text-white">Weather Dashboard</h1>
+        <p class="text-center text-blue-100 mb-8">Real-time weather information for any city</p>
+
+        <div class="max-w-4xl mx-auto">
+            <!-- Search Box -->
+            <div class="bg-white rounded-lg shadow-2xl p-6 mb-6">
+                <div class="flex gap-2">
+                    <input type="text" id="cityInput" placeholder="Enter city name (e.g., Lagos, London, New York)..."
+                        class="flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        onkeypress="if(event.key==='Enter') getWeather()">
+                    <button onclick="getWeather()" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-semibold">
+                        <i class="fas fa-search mr-2"></i>Search
+                    </button>
+                    <button onclick="getCurrentLocation()"
+                        class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">
+                        <i class="fas fa-location-dot"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Weather Display -->
+            <div id="weatherDisplay" class="hidden">
+                <!-- Main Weather Card -->
+                <div class="bg-white rounded-lg shadow-2xl p-8 mb-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h2 id="cityName" class="text-4xl font-bold mb-2"></h2>
+                            <p id="date" class="text-gray-500"></p>
+                        </div>
+                        <div id="weatherIcon" class="text-6xl"></div>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <div id="temp" class="text-7xl font-bold text-blue-700"></div>
+                            <div id="description" class="text-2xl text-gray-600 capitalize mt-2"></div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm text-gray-500">Feels like</div>
+                            <div id="feelsLike" class="text-3xl font-bold text-gray-700"></div>
+                        </div>
+                    </div>
+
+                    <!-- Weather Details Grid -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-blue-50 p-4 rounded-lg text-center">
+                            <div class="text-3xl mb-2 text-blue-600"><i class="fas fa-droplet"></i></div>
+                            <div class="text-gray-500 text-sm">Humidity</div>
+                            <div id="humidity" class="font-bold text-xl"></div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg text-center">
+                            <div class="text-3xl mb-2 text-green-600"><i class="fas fa-wind"></i></div>
+                            <div class="text-gray-500 text-sm">Wind Speed</div>
+                            <div id="wind" class="font-bold text-xl"></div>
+                        </div>
+                        <div class="bg-yellow-50 p-4 rounded-lg text-center">
+                            <div class="text-3xl mb-2 text-yellow-600"><i class="fas fa-gauge-high"></i></div>
+                            <div class="text-gray-500 text-sm">Pressure</div>
+                            <div id="pressure" class="font-bold text-xl"></div>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg text-center">
+                            <div class="text-3xl mb-2 text-purple-600"><i class="fas fa-eye"></i></div>
+                            <div class="text-gray-500 text-sm">Visibility</div>
+                            <div id="visibility" class="font-bold text-xl"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Info -->
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-xl font-bold mb-4"><i class="fas fa-sun text-yellow-500 mr-2"></i>Sun Times</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Sunrise</span>
+                                <span id="sunrise" class="font-semibold"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Sunset</span>
+                                <span id="sunset" class="font-semibold"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-xl font-bold mb-4"><i class="fas fa-globe text-blue-500 mr-2"></i>Location Info
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Country</span>
+                                <span id="country" class="font-semibold"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Coordinates</span>
+                                <span id="coords" class="font-semibold text-sm"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading" class="hidden text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-16 w-16 border-b-4 border-white"></div>
+                <p class="text-white mt-4 text-lg">Loading weather data...</p>
+            </div>
+
+            <!-- Error Message -->
+            <div id="error" class="hidden bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg">
+                <p class="font-bold">Error!</p>
+                <p id="errorMessage"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const weatherConditions = {
+            'Clear': { icon: '<i class="fas fa-sun text-yellow-400"></i>', desc: 'Clear Sky' },
+            'Clouds': { icon: '<i class="fas fa-cloud text-gray-400"></i>', desc: 'Cloudy' },
+            'Rain': { icon: '<i class="fas fa-cloud-rain text-blue-400"></i>', desc: 'Rainy' },
+            'Drizzle': { icon: '<i class="fas fa-cloud-drizzle text-blue-300"></i>', desc: 'Drizzle' },
+            'Thunderstorm': { icon: '<i class="fas fa-cloud-bolt text-purple-500"></i>', desc: 'Thunderstorm' },
+            'Snow': { icon: '<i class="fas fa-snowflake text-blue-200"></i>', desc: 'Snowy' },
+            'Mist': { icon: '<i class="fas fa-smog text-gray-300"></i>', desc: 'Misty' }
+        };
+
+        function getWeather() {
+            const city = document.getElementById('cityInput').value.trim();
+            if (!city) {
+                showError('Please enter a city name');
+                return;
+            }
+
+            showLoading();
+
+            // Simulate API call with realistic demo data
+            setTimeout(() => {
+                const conditions = Object.keys(weatherConditions);
+                const randomCondition = conditions[Math.floor(Math.random() * conditions.length)];
+                const weatherInfo = weatherConditions[randomCondition];
+
+                const demoData = {
+                    city: city,
+                    country: 'NG',
+                    temp: Math.floor(Math.random() * 15) + 25,
+                    feelsLike: Math.floor(Math.random() * 15) + 24,
+                    description: weatherInfo.desc,
+                    icon: weatherInfo.icon,
+                    humidity: Math.floor(Math.random() * 30) + 60,
+                    wind: Math.floor(Math.random() * 15) + 5,
+                    pressure: Math.floor(Math.random() * 50) + 1000,
+                    visibility: Math.floor(Math.random() * 5) + 5,
+                    sunrise: '6:' + (Math.floor(Math.random() * 30) + 10),
+                    sunset: '18:' + (Math.floor(Math.random() * 30) + 20),
+                    lat: (Math.random() * 180 - 90).toFixed(2),
+                    lon: (Math.random() * 360 - 180).toFixed(2)
+                };
+
+                displayWeather(demoData);
+            }, 1000);
+        }
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                showLoading();
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        document.getElementById('cityInput').value = 'Your Location';
+                        getWeather();
+                    },
+                    (error) => {
+                        showError('Unable to get your location. Please enter city manually.');
+                    }
+                );
+            } else {
+                showError('Geolocation is not supported by your browser');
+            }
+        }
+
+        function displayWeather(data) {
+            hideLoading();
+            hideError();
+
+            const now = new Date();
+            document.getElementById('cityName').textContent = data.city;
+            document.getElementById('date').textContent = now.toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+            document.getElementById('weatherIcon').innerHTML = data.icon;
+            document.getElementById('temp').textContent = data.temp + '°C';
+            document.getElementById('feelsLike').textContent = data.feelsLike + '°C';
+            document.getElementById('description').textContent = data.description;
+            document.getElementById('humidity').textContent = data.humidity + '%';
+            document.getElementById('wind').textContent = data.wind + ' km/h';
+            document.getElementById('pressure').textContent = data.pressure + ' hPa';
+            document.getElementById('visibility').textContent = data.visibility + ' km';
+            document.getElementById('sunrise').textContent = data.sunrise + ' AM';
+            document.getElementById('sunset').textContent = data.sunset + ' PM';
+            document.getElementById('country').textContent = data.country;
+            document.getElementById('coords').textContent = `${data.lat}°, ${data.lon}°`;
+
+            document.getElementById('weatherDisplay').classList.remove('hidden');
+        }
+
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('weatherDisplay').classList.add('hidden');
+            document.getElementById('error').classList.add('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+        }
+
+        function showError(message) {
+            hideLoading();
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('error').classList.remove('hidden');
+            document.getElementById('weatherDisplay').classList.add('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('error').classList.add('hidden');
+        }
+    </script>
+</body>
+
+</html>
